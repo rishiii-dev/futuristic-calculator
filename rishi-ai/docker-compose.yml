@@ -5,6 +5,11 @@ services:
     restart: unless-stopped
     volumes:
       - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   backend:
     build: ./backend
@@ -13,10 +18,15 @@ services:
     environment:
       OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_MODEL: qwen3:4b
-    ports:
-      - "8080:8080"
+      RISHI_NAME: Rishi
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./frontend:/app/frontend:ro
 
 volumes:
   ollama_data:
+
